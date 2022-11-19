@@ -39,7 +39,10 @@ export class UsersService {
   }
 
   async login({ email, password }: LoginInput): Promise<string> {
-    const user = await this.users.findOne({ where: { email } });
+    const user = await this.users.findOne({
+      where: { email },
+      select: ['password', 'id'],
+    });
     if (!user) {
       throw new Error('User not found');
     }
