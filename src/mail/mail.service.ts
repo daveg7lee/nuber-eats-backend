@@ -2,7 +2,7 @@ import got from 'got';
 import * as FormData from 'form-data';
 import { Inject, Injectable } from '@nestjs/common';
 import { CONFIG_OPTIONS } from '../common/common.contants';
-import { MailModuleOptions } from './mail.interfaces';
+import { EmailVars, MailModuleOptions } from './mail.interfaces';
 
 @Injectable()
 export class MailService {
@@ -10,16 +10,23 @@ export class MailService {
     @Inject(CONFIG_OPTIONS) private readonly options: MailModuleOptions,
   ) {}
 
-  private async sendEmail(subject: string, content: string) {
+  private async sendEmail(
+    subject: string,
+    template: string,
+    emailVars: EmailVars[],
+  ) {
     const form = new FormData();
-    form.append('from', `Excited User <mailgun@${this.options.domain}>`);
+    form.append(
+      'from',
+      `Dave from Nuber Eats <mailgun@${this.options.domain}>`,
+    );
     form.append('to', 'daveg7lee@gmail.com');
     form.append('subject', subject);
-    form.append('text', content);
+    form.append('template', template);
+    emailVars.forEach((eVar) => form.append(`v:${eVar.key}`, eVar.value));
 
-    const response = await got(
-      `https://api.mailgun.net/v3/${this.options.domain}/messages`,
-      {
+    try {
+      await got(`https://api.mailgun.net/v3/${this.options.domain}/messages`, {
         method: 'POST',
         headers: {
           Authorization: `Basic ${Buffer.from(
@@ -27,9 +34,16 @@ export class MailService {
           ).toString('base64')}`,
         },
         body: form,
-      },
-    );
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  }
 
-    console.log(response.body);
+  sendVerificationEmail(email: string, code: string) {
+    this.sendEmail('Verify Your Email', 'nuber_eats_email_template', [
+      { key: 'code', value: code },
+      { key: 'username', value: email },
+    ]);
   }
 }
