@@ -272,5 +272,41 @@ describe('UserService', () => {
     });
   });
 
-  it.todo('verifyEmail');
+  describe('verifyEmail', () => {
+    it('should verify email', async () => {
+      const mockedVerification = {
+        id: 1,
+        user: { verified: false },
+      };
+      verificationRepository.findOne.mockResolvedValue(mockedVerification);
+
+      const result = await service.verifyEmail('code');
+
+      expect(verificationRepository.findOne).toHaveBeenCalledWith({
+        where: { code: 'code' },
+        relations: ['user'],
+      });
+      expect(verificationRepository.delete).toHaveBeenCalledWith(
+        mockedVerification.id,
+      );
+
+      expect(userRepository.save).toHaveBeenCalledWith({ verified: true });
+
+      expect(result).toEqual({ ok: true });
+    });
+    it('should fail on verification not found', async () => {
+      verificationRepository.findOne.mockResolvedValue(undefined);
+
+      const result = await service.verifyEmail('code');
+
+      expect(result).toEqual({ ok: false, error: 'Verification not found.' });
+    });
+    it('should fail on exception', async () => {
+      verificationRepository.findOne.mockResolvedValue(new Error());
+
+      const result = await service.verifyEmail('code');
+
+      expect(result).toEqual({ ok: false, error: 'Could not verify email' });
+    });
+  });
 });

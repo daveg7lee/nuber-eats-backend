@@ -115,7 +115,6 @@ export class UserService {
         ok: true,
       };
     } catch (error) {
-      console.log(error);
       return { ok: false, error: 'Could not update profile.' };
     }
   }
@@ -124,7 +123,7 @@ export class UserService {
     try {
       const verification = await this.verifications.findOne({
         where: { code },
-        relations: ['usr'],
+        relations: ['user'],
       });
       if (verification) {
         verification.user.verified = true;
@@ -134,7 +133,7 @@ export class UserService {
       }
       return { ok: false, error: 'Verification not found.' };
     } catch (error) {
-      return { ok: false, error };
+      return { ok: false, error: 'Could not verify email' };
     }
   }
 }
