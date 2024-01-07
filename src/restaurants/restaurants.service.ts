@@ -70,12 +70,15 @@ export class RestaurantService {
         );
       }
       await this.restaurants.save([
-        this.restaurants.create({
+        {
           id: editRestaurantInput.restaurantId,
           ...editRestaurantInput,
           ...(category && { category }),
-        }),
+        },
       ]);
+      return {
+        ok: true,
+      };
     } catch (e) {
       return {
         ok: true,
