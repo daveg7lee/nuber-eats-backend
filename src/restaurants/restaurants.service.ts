@@ -136,4 +136,8 @@ export class RestaurantService {
       };
     }
   }
+
+  async countRestaurants(category: Category) {
+    return this.restaurants.count({ where: { category: { id: category.id } } });
+  }
 }
