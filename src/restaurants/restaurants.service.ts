@@ -19,6 +19,7 @@ import {
 } from './dtos/delete-restaurant.dto';
 import { AllCategoriesOutput } from './dtos/all-categories.dto';
 import { CategoryInput, CategoryOutput } from './dtos/category.dto';
+import { RestaurantsInput, RestaurantsOutput } from './dtos/restaurants.dot';
 
 @Injectable()
 export class RestaurantService {
@@ -161,17 +162,37 @@ export class RestaurantService {
         take: 5,
         skip: (page - 1) * 5,
       });
-      category.restaurants = restaurants;
       const totalResults = await this.countRestaurants(category);
       return {
         ok: true,
         category,
+        restaurants,
         totalPages: Math.ceil(totalResults / 5),
       };
     } catch (e) {
       return {
         ok: false,
         error: `Error occured! Could not load category. (${e.message})`,
+      };
+    }
+  }
+
+  async allRestaurants({ page }: RestaurantsInput): Promise<RestaurantsOutput> {
+    try {
+      const [restaurants, totalResults] = await this.restaurants.findAndCount({
+        take: 5,
+        skip: (page - 1) * 5,
+      });
+      return {
+        ok: true,
+        results: restaurants,
+        totalPages: Math.ceil(totalResults / 5),
+        totalItems: totalResults,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: `Error occured! Could not load restaurants. (${e.message})`,
       };
     }
   }
