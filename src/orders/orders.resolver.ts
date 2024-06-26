@@ -53,7 +53,8 @@ export class OrderResolver {
   }
 
   @Subscription((returns) => String)
-  orderSubscription() {
+  @Role(['Delivery', 'Owner'])
+  orderSubscription(@AuthUser() user: User) {
     return pubsub.asyncIterator('hotPotatos');
   }
 }
