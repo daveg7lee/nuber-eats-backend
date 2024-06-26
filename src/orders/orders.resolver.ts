@@ -55,7 +55,11 @@ export class OrderResolver {
     return this.orderService.editOrder(user, editOrderInput);
   }
 
-  @Subscription((returns) => String)
+  @Subscription((returns) => String, {
+    filter: (payload, variables, context) => {
+      return true;
+    },
+  })
   @Role(['Delivery', 'Owner'])
   orderSubscription(@AuthUser() user: User) {
     return this.pubSub.asyncIterator('hotPotatos');
