@@ -11,7 +11,11 @@ import { GetOrdersInput, GetOrdersOutput } from './dtos/get-orders.dto';
 import { GetOrderInput, GetOrderOutput } from './dtos/get-order.dto';
 import { EditOrderInput, EditOrderOutput } from './dtos/edit-order.dto';
 import { PubSub } from 'graphql-subscriptions';
-import { NEW_PENDING_ORDER, PUB_SUB } from 'src/common/common.contants';
+import {
+  NEW_COOKED_ORDER,
+  NEW_PENDING_ORDER,
+  PUB_SUB,
+} from 'src/common/common.contants';
 
 @Injectable()
 export class OrderService {
@@ -187,7 +191,10 @@ export class OrderService {
     { id, status }: EditOrderInput,
   ): Promise<EditOrderOutput> {
     try {
-      const order = await this.orders.findOne({ where: { id } });
+      const order = await this.orders.findOne({
+        where: { id },
+        relations: ['restaurant'],
+      });
       if (!order) {
         return {
           ok: false,
@@ -220,11 +227,19 @@ export class OrderService {
           error: "You can't do this.",
         };
       }
-      await this.orders.save([{ id, status }]);
+      await this.orders.save({ id, status });
+      if (user.role === UserRole.Owner) {
+        if (status === OrderStatus.Cooked) {
+          await this.pubSub.publish(NEW_COOKED_ORDER, {
+            cookedOrders: { ...order, status },
+          });
+        }
+      }
       return {
         ok: true,
       };
     } catch (e) {
+      console.log(e);
       return {
         ok: false,
         error: 'Could not edit order',
